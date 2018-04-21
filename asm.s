@@ -174,12 +174,18 @@ deriviate:
     push rbp
     mov rbp, rsp
 
+    ; mov rax, [rdi]                ; For C debugging
+    ; mov [polynom], rax
+    ; mov rax, [rdi + 8]
+    ; mov [polynom + 8], rax
     mov rax, [polynom]   ; Copy order
+    dec rax
     mov [derivative], rax
     
     cmp qword [polynom], 0
     jne .notZero
     
+    inc qword [derivative]
     mov rsi, 16                         ; sizeof(Complex)
     mov rdi, 1
     call calloc
@@ -192,15 +198,15 @@ deriviate:
     jmp .done
 
     .notZero:
-        mov rcx, [polynom]              ; polynom.order
         mov r12, 1                      ; loop index
         mov rsi, 16                         ; sizeof(Complex)
         mov rdi, [derivative]
         inc rdi
         call calloc
         mov [derivative + 8], rax
-        mov r8, [derivative + 8]
-        mov r9, [polynom + 8]
+        mov rcx, [polynom]              ; polynom.order
+        mov r8, [derivative + 8]        ; derivative.coeff array
+        mov r9, [polynom + 8]           ; polynom.coeff array
         .loopDerivative:
             mov rax, 16
             mul r12
@@ -280,8 +286,8 @@ printDer:
     mov rsi, 0
     .coeff_loop:
         mov edi, coeffFs
-        movsd xmm0, QWORD [r12]
-        movsd xmm1, QWORD [r12 + 8]
+        movsd xmm0, qword [r12]
+        movsd xmm1, qword [r12 + 8]
         mov eax, 2
         push rsi
         push rcx

@@ -16,7 +16,7 @@ typedef struct Polynom
 extern Complex power(Complex *c, long pow);
 extern Complex complexMul(Complex *c1, Complex *c2);
 extern Complex computePoly(Complex *c, Polynom *p);
-extern void deriviate();
+extern void deriviate(Polynom *p);
 
 void scanInput(Polynom *p, double *epsilon, Complex *initial)
 {
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     double epsilon;
     Complex initial;
     scanInput(&p, &epsilon, &initial);
-    deriviate();
+    deriviate(&p);
 
     free(p.coeffcients);
     return 0;
