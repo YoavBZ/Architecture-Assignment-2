@@ -1,3 +1,5 @@
 epsilon = 2.5e-4
-order = 3
+order = 1
+coeff 1 = -4.5 -5.6
+coeff 0 = 2.3 3.4
 initial = 1.5 -1.4
