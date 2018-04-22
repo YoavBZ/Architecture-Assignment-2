@@ -13,10 +13,48 @@ typedef struct Polynom
     Complex *coeffcients;
 } Polynom;
 
+Complex initial;
+Polynom p;
+Polynom d;
+double epsilon;
+
 extern Complex power(Complex *c, long pow);
 extern Complex complexMul(Complex *c1, Complex *c2);
+extern Complex complexDiv(Complex *c1, Complex *c2);
 extern Complex computePoly(Complex *c, Polynom *p);
-extern void deriviate(Polynom *p);
+// extern void deriviate(Polynom *p);
+
+Polynom deriviate(Polynom *p)
+{
+    Polynom derivative;
+    if (p->order != 0)
+    {
+        derivative.order = p->order - 1;
+        derivative.coeffcients = calloc(derivative.order + 1, sizeof(Complex));
+        for (long i = 1; i <= p->order; i++)
+        {
+            Complex temp = {i, 0.0};
+            derivative.coeffcients[i - 1] = complexMul(&p->coeffcients[i], &temp);
+        }
+    }
+    else
+    {
+        derivative.order = 0;
+        derivative.coeffcients = calloc(derivative.order + 1, sizeof(Complex));
+        derivative.coeffcients[0].real = 0;
+        derivative.coeffcients[0].imaginery = 0;
+    }
+    return derivative;
+}
+
+// void nextInitial()
+// {
+//     Complex y1 = computePoly(&initial, &p);
+//     Complex m = computePoly(&initial, &d);
+//     Complex res = complexDiv(&y1, &m);
+//     initial.real = initial.real - res.real;
+//     initial.imaginery = initial.imaginery - res.imaginery;
+// }
 
 void scanInput(Polynom *p, double *epsilon, Complex *initial)
 {
@@ -41,36 +79,12 @@ void scanInput(Polynom *p, double *epsilon, Complex *initial)
     printf("inital = %lf %lf\n", initial->real, initial->imaginery);
 }
 
-// Polynom deriviate(Polynom *p)
-// {
-//     Polynom derivative;
-//     if (p->order != 0)
-//     {
-//         derivative.order = p->order - 1;
-//         derivative.coeffcients = calloc(derivative.order + 1, sizeof(Complex));
-//         for (long i = 1; i <= p->order; i++)
-//         {
-//             Complex temp = {i, 0.0};
-//             derivative.coeffcients[i - 1] = complexMul(&p->coeffcients[i], &temp);
-//         }
-//     }
-//     else
-//     {
-//         derivative.order = 0;
-//         derivative.coeffcients = calloc(derivative.order + 1, sizeof(Complex));
-//         derivative.coeffcients[0].real = 0;
-//         derivative.coeffcients[0].imaginery = 0;
-//     }
-//     return derivative;
-// }
-
 int main(int argc, char **argv)
 {
-    Polynom p;
-    double epsilon;
-    Complex initial;
+
     scanInput(&p, &epsilon, &initial);
-    deriviate(&p);
+    d = deriviate(&p);
+    nextInitial();
 
     free(p.coeffcients);
     return 0;

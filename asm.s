@@ -3,6 +3,7 @@ section .data
     orderFs: db "order = %ld", 10, 0
     initFs: db "initial = %lf %lf", 10, 0
     coeffFs: db "coeff %ld = %lf %lf", 10, 0
+    rootFs: db "root = %lf %lf", 10, 0
     _0: dq 0.0
     _1: dq 1.0
 
@@ -13,8 +14,75 @@ section .bss
     derivative: resq 2      ; { long order, Complex *coeff }
 
 section .text
-    global complexMul, power, computePoly, deriviate
+    global main
     extern scanf, printf, calloc, free
+
+; void nextInitial()
+nextInitial:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 32
+    
+    lea rdi, [initial]
+    lea rsi, [polynom]
+    call computePoly
+    movsd qword [rbp - 16], xmm0
+    movsd qword [rbp - 8], xmm1
+
+    lea rdi, [initial]
+    lea rsi, [derivative]
+    call computePoly
+    movsd qword [rbp - 32], xmm0
+    movsd qword [rbp - 24], xmm1
+    
+    lea rdi, [rbp - 16]
+    lea rsi, [rbp - 32]
+    call complexDiv
+
+    movsd xmm2, [initial]
+    movsd xmm3, [initial + 8]
+
+    subsd xmm2, xmm0
+    subsd xmm3, xmm1
+
+    movsd [initial], xmm2
+    movsd [initial + 8], xmm3
+
+    movsd xmm0, [initial]
+    movsd xmm1, [initial + 8]
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+; Complex complexDiv(Complex *c1, Complex *c2)
+complexDiv:
+    push rbp
+    mov rbp, rsp
+    
+    movsd xmm4, qword [rdi]
+    movsd xmm2, qword [rdi + 8]
+    movsd xmm1, qword [rsi]
+    movsd xmm3, qword [rsi + 8]
+    mov r12, -1
+    cvtsi2sd xmm0, r12
+    mulsd xmm3, xmm0            ; Multiple real value by index
+    movsd qword [rsi + 8], xmm3
+    call complexMul             ; Compute c1 * adj(c2)
+    
+    movsd xmm2, qword [rsi]
+    mulsd xmm2, xmm2
+    movsd xmm3, qword [rsi + 8] 
+    mulsd xmm3, xmm3
+
+    addsd xmm2, xmm3
+
+    divsd xmm1, xmm2
+    divsd xmm0, xmm2
+
+    mov rsp, rbp
+    pop rbp
+    ret
 
 ; Complex complexMul(Complex *c1, Complex *c2)
 complexMul:
@@ -34,6 +102,7 @@ complexMul:
     mulsd xmm1, xmm2
     addsd xmm1, xmm3
     
+    mov rsp, rbp
     pop rbp
     ret
 
@@ -112,7 +181,7 @@ computePoly:
         pop rbp
         ret
 
-main1:
+main:
     push rbp
     mov rbp, rsp
 
@@ -165,10 +234,39 @@ main1:
     mov eax, 0
     call scanf
 
-    call printPoly
-    
-    mov rax, 60
-    syscall
+    ; call printPoly
+
+    call deriviate
+
+    .mainLoop:
+        mov rdi, initial
+        mov rsi, polynom
+        call computePoly
+
+        mulsd xmm0, xmm0
+        mulsd xmm1, xmm1
+        addsd xmm0, xmm1
+        movsd xmm2, [epsilon]
+        ucomisd xmm0, xmm2             ; Compare to epsilon
+        jbe .done
+
+        call nextInitial
+        jmp .mainLoop
+
+    .done:
+        movsd xmm0, QWORD [initial]
+        movsd xmm1, QWORD [initial + 8]
+        mov edi, rootFs
+        mov eax, 2
+        call printf
+
+        mov rdi, [polynom + 8]
+        call free
+        mov rdi, [derivative + 8]
+        call free
+
+        mov rax, 60
+        syscall
 
 deriviate:
     push rbp
@@ -226,7 +324,7 @@ deriviate:
             loop .loopDerivative, rcx
     
     .done:
-        call printDer
+        ; call printDer
         mov rsp, rbp
         pop rbp
         ret
