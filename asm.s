@@ -246,7 +246,8 @@ main:
         mulsd xmm0, xmm0
         mulsd xmm1, xmm1
         addsd xmm0, xmm1
-        movsd xmm2, [epsilon]
+        movsd xmm2, QWORD [epsilon] 
+        mulsd xmm2,xmm2 
         ucomisd xmm0, xmm2             ; Compare to epsilon
         jbe .done
 
